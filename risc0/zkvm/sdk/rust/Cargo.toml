@@ -50,3 +50,7 @@ pure-prove = ["prove", "std"]
 [[bench]]
 name = "guest_run"
 harness = false
+
+[[bench]]
+name = "verify"
+harness = false
