@@ -60,17 +60,20 @@ use util::as_words_padded;
 pub mod deserialize;
 pub mod serialize;
 
-pub use deserialize::*;
-pub use serialize::*;
+pub use deserialize::Deserialize;
+pub use serialize::{Serialize, serialize, AllocBuf, Alloc};
+pub use guestio_derive::{Serialize, Deserialize};
 
 pub fn align_bytes_to_words(bytes: usize) -> usize {
     (bytes + WORD_SIZE - 1) / WORD_SIZE
 }
 
-#[allow(dead_code)]
-pub(crate) fn align_words_to_pads(words: usize) -> usize {
-    (words + PAD_WORDS - 1) / PAD_WORDS
+pub(crate) fn pad_words(words: usize) -> usize {
+    ((words + PAD_WORDS - 1) / PAD_WORDS) * PAD_WORDS
 }
+
+#[cfg(test)]
+pub mod tests;
 
 #[cfg(test)]
 mod derive_test;

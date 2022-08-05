@@ -9,9 +9,8 @@ edition = "2021"
 bytemuck = "1.11.0"
 criterion = "0.3.6"
 thiserror = "1.0.32"
-
-[dev-dependencies]
 guestio_derive = {path = "../guestio_derive"}
+
 
 [[bench]]
 name = "ser_der"

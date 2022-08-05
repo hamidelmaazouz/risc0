@@ -4,18 +4,16 @@ use alloc::vec::Vec;
 
 pub trait Deserialize<'a> {
     type RefType;
-    type OrigType;
 
     const FIXED_WORDS : usize;
 
     fn deserialize_from(words: &'a [u32]) -> Self::RefType;
 
-    fn into_orig(val: Self::RefType) -> Self::OrigType;
+    fn into_orig(val: Self::RefType) -> Self;
 }
 
 impl<'a> Deserialize<'a> for u32 {
     type RefType = u32;
-    type OrigType = u32;
 
     const FIXED_WORDS : usize =
         1
@@ -25,12 +23,11 @@ impl<'a> Deserialize<'a> for u32 {
         words[0]
     }
 
-    fn into_orig(val: Self::RefType) -> Self::OrigType { val.into() }
+    fn into_orig(val: Self::RefType) -> Self { val.into() }
 }
 
 impl<'a> Deserialize<'a> for std::string::String {
     type RefType = &'a str;
-    type OrigType = std::string::String;
 
     const FIXED_WORDS : usize =
         2
@@ -41,13 +38,12 @@ impl<'a> Deserialize<'a> for std::string::String {
 
         std::str::from_utf8(&bytemuck::cast_slice(&words[ptr as usize..])[..len as usize]).unwrap()
     }
-    fn into_orig(val: Self::RefType) -> Self::OrigType { val.into() }
+    fn into_orig(val: Self::RefType) -> Self { val.into() }
 }
 
 impl<'a, T: Deserialize<'a>> Deserialize<'a> for Option<T>
 {
     type RefType = Option< T::RefType>;
-    type OrigType = Option<T::OrigType>;
 
     const FIXED_WORDS : usize =
         1
@@ -63,7 +59,7 @@ impl<'a, T: Deserialize<'a>> Deserialize<'a> for Option<T>
         }
     }
 
-    fn into_orig(val : Self::RefType) -> Self::OrigType {
+    fn into_orig(val : Self::RefType) -> Self {
         val.map(|v| T::into_orig(v))
     }
 }
@@ -71,7 +67,6 @@ impl<'a, T: Deserialize<'a>> Deserialize<'a> for Option<T>
 impl<'a, T: Deserialize<'a>> Deserialize<'a> for Box<T>
 {
     type RefType = T::RefType;
-    type OrigType = Box<T::OrigType>;
 
     const FIXED_WORDS : usize =
         T::FIXED_WORDS
@@ -81,7 +76,7 @@ impl<'a, T: Deserialize<'a>> Deserialize<'a> for Box<T>
         T::deserialize_from(words)
     }
 
-    fn into_orig(val: Self::RefType) -> Self::OrigType {
+    fn into_orig(val: Self::RefType) -> Self {
         Box::new(T::into_orig(val))
     }
 }
@@ -135,7 +130,6 @@ impl<'a, T: Deserialize<'a>> Iterator for VecRefIter<'a, T> {
 impl<'a, T: Deserialize<'a>> Deserialize<'a> for Vec<T>
 {
     type RefType = VecRef<'a, T>;
-    type OrigType = Vec<T::OrigType>;
 
     const FIXED_WORDS : usize =
         2
@@ -145,7 +139,7 @@ impl<'a, T: Deserialize<'a>> Deserialize<'a> for Vec<T>
         VecRef{len: words[0] as usize, words: &words[words[1] as usize..], phantom: PhantomData}
     }
 
-    fn into_orig(val: Self::RefType) -> Self::OrigType {
+    fn into_orig(val: Self::RefType) -> Self {
         let mut v = Vec::with_capacity(val.len());
         v.extend(val.into_iter()
                  .map(|v| T::into_orig(v)));
@@ -153,3 +147,25 @@ impl<'a, T: Deserialize<'a>> Deserialize<'a> for Vec<T>
         
     }
 }
+
+impl<'a, T: Deserialize<'a>, const N: usize> Deserialize<'a> for [T; N]
+{
+    type RefType = VecRef<'a, T>;
+
+    const FIXED_WORDS : usize =
+        N * T::FIXED_WORDS
+;
+
+    fn deserialize_from(words: &'a [u32]) -> Self::RefType {
+        VecRef{len: N ,  words, phantom: PhantomData}
+    }
+
+    fn into_orig(val: Self::RefType) -> Self {
+        match 
+            Vec::from_iter(val.into_iter().map(|x| T::into_orig(x))).try_into() {
+                Ok(result) => result,
+                _ => panic!("VecRef iterator didn't return the proper number of elements"),
+        }
+    }
+}
+
