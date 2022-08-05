@@ -45,7 +45,7 @@ pub fn as_words_padded<I: IntoIterator<Item = u8>>(
 #[test]
 pub fn test_pads() {
     let mut a: Vec<u32> = as_words_padded([]).collect();
-    assert_eq!(a, vec![]);
+    assert_eq!(a, Vec::<u32>::new());
 
     a = as_words_padded([1]).collect();
     assert_eq!(a, vec![1]);

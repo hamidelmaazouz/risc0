@@ -12,7 +12,7 @@ struct StructContainer<T: Eq + Serialize + Debug + for<'a> Deserialize<'a>> {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 struct StructContainer2<T: Debug + Serialize + Eq + Clone + for<'a> Deserialize<'a>> {
     a: u32,
-    b: Option<T>,
+    b: (u32, Option<T>),
     c: u32,
 }
 
@@ -49,12 +49,12 @@ pub fn test_round_trip<T: Serialize + for<'a> Deserialize<'a> + Eq + Debug + Clo
     test_round_trip_no_containers(&Vec::<StructContainer2<T>>::from([
         StructContainer2::<T> {
             a: 3,
-            b: None,
+            b: (20, None),
             c: 4,
         },
         StructContainer2::<T> {
             a: 5,
-            b: Some(val.clone()),
+            b: (21, Some(val.clone())),
             c: 6,
         },
     ]));
@@ -64,7 +64,7 @@ pub fn test_round_trip<T: Serialize + for<'a> Deserialize<'a> + Eq + Debug + Clo
             a: 7,
             b: Box::from(StructContainer2::<T> {
                 a: 8,
-                b: Some(val.clone()),
+                b: (22, Some(val.clone())),
                 c: 9,
             }),
             c: 10,
@@ -91,4 +91,5 @@ fn basic_types() {
     test_round_trip(&[1u32, 2, 3]);
     test_round_trip(&[1u32, 2, 3, 4]);
     test_round_trip(&[1u32, 2, 3, 4, 5]);
+    test_round_trip(&());
 }

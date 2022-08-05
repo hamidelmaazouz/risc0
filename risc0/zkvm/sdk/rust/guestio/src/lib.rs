@@ -40,11 +40,11 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum GuestioError {
-    #[error("Buffer is too small; enlarge and try again.")]
-    BufferTooSmall,
+    #[error("Allocation mismatch during serialization; tot_len() does not match number of words actually allocated")]
+    AllocationSizeMismatch,
 
-    #[error("Buffer underrun")]
-    BufferUnderrun,
+    #[error("Fill overrun during serialization when attempting to fill subobject")]
+    FillOverrun,
 }
 
 pub type Result<T> = core::result::Result<T, GuestioError>;
@@ -61,8 +61,8 @@ pub mod deserialize;
 pub mod serialize;
 
 pub use deserialize::Deserialize;
-pub use serialize::{Serialize, serialize, AllocBuf, Alloc};
-pub use guestio_derive::{Serialize, Deserialize};
+pub use guestio_derive::{Deserialize, Serialize};
+pub use serialize::{serialize, Alloc, AllocBuf, Serialize};
 
 pub fn align_bytes_to_words(bytes: usize) -> usize {
     (bytes + WORD_SIZE - 1) / WORD_SIZE
@@ -74,6 +74,3 @@ pub(crate) fn pad_words(words: usize) -> usize {
 
 #[cfg(test)]
 pub mod tests;
-
-#[cfg(test)]
-mod derive_test;

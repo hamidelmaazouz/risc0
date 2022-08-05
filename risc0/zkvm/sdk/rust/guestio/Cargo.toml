@@ -10,6 +10,7 @@ bytemuck = "1.11.0"
 criterion = "0.3.6"
 thiserror = "1.0.32"
 guestio_derive = {path = "../guestio_derive"}
+impl-trait-for-tuples = "0.2.2"
 
 
 [[bench]]

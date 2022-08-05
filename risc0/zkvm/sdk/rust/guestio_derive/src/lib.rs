@@ -1,8 +1,8 @@
 use proc_macro::{Span, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput, GenericParam, Lifetime,
-    LifetimeDef,  Ident,
+    parse_macro_input, punctuated::Punctuated, token::Comma, DeriveInput, GenericParam, Ident,
+    Lifetime, LifetimeDef,
 };
 
 #[proc_macro_derive(Serialize)]
@@ -34,8 +34,8 @@ pub fn derive_serialize(input: proc_macro::TokenStream) -> TokenStream {
             fn fill(&self, buf: &mut guestio::AllocBuf, a: &mut guestio::Alloc) -> guestio::Result<()> {
                 let pos: usize = 0;
                 #(
-                    self. #field_names . fill(&mut buf.descend(pos), a)?;
-                    let pos = pos + <#field_ty as guestio::Serialize>::fixed_len();
+                    self. #field_names . fill(&mut buf.descend(pos, <#field_ty as guestio::Serialize>::FIXED_WORDS)?, a)?;
+                    let pos = pos + <#field_ty as guestio::Serialize>::FIXED_WORDS;
                 );*
 
                 Ok(())
@@ -69,14 +69,10 @@ pub fn derive_deserialize(input: proc_macro::TokenStream) -> TokenStream {
     let ref_ty_generics_turbofish = ref_ty_generics.as_turbofish();
 
     let phantom_types = Punctuated::<Ident, Comma>::from_iter(
-        input
-            .generics
-            .params
-            .iter()
-            .filter_map(|p| match p {
-                GenericParam::Type(p) => Some(p.ident.clone()),
-                _ => None,
-            })
+        input.generics.params.iter().filter_map(|p| match p {
+            GenericParam::Type(p) => Some(p.ident.clone()),
+            _ => None,
+        }),
     );
 
     let field_names: Vec<_> = fields.iter().map(|f| f.ident.as_ref().unwrap()).collect();
