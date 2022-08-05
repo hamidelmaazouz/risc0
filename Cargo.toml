@@ -12,6 +12,8 @@ members = [
   "risc0/zkvm/sdk/rust",
   "risc0/zkvm/sdk/rust/build",
   "risc0/zkvm/sdk/rust/circuit",
+  "risc0/zkvm/sdk/rust/guestio",
+  "risc0/zkvm/sdk/rust/guestio_derive",
 ]
 
 exclude = [
